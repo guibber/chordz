@@ -7,6 +7,18 @@ chordz = function() {
     const MODE_MEEK = 1;
     let mode = MODE_COMPETE;
 
+    function setInterval(v) {
+        clearInterval = v;
+    };
+
+    function setModeCompete() {
+        mode = MODE_COMPETE;
+    };
+
+    function setModeMeek() {
+        mode = MODE_MEEK;
+    };
+
     function scheduleFunc(func) {
         timeoutId = window.setTimeout(func, clearInterval);
     };
@@ -49,7 +61,6 @@ chordz = function() {
     }
 
     function handleCompeteKeydown(evt) {
-        activeKeys += evt.key;
         let match = checkMatch();
         log();
         if (match) {
@@ -62,9 +73,16 @@ chordz = function() {
     };
 
     function handleMeekKeydown(evt) {
-        activeKeys += evt.key;
         cancelScheduledFunc();
         scheduleFunc(callMatchingChord);
+    };
+
+    function handleKeydown(evt) {
+        activeKeys += evt.key;
+        if (mode === MODE_COMPETE)
+            return handleCompeteKeydown(evt);
+        else
+            return handleMeekKeydown(evt);
     };
 
     function register(chord, func) {
@@ -78,10 +96,7 @@ chordz = function() {
     function init(initMode, initClearInterval) {
         mode = initMode || mode;
         clearInterval = initClearInterval | clearInterval;
-        if (MODE_COMPETE)
-            document.addEventListener("keydown", handleCompeteKeydown);
-        else 
-            document.addEventListener("keydown", handleMeekKeydown);
+        document.addEventListener("keydown", handleKeydown);
         logSettings();
     }
 
@@ -89,6 +104,9 @@ chordz = function() {
         init: init,
         register: register,
         unregister: unregister,
+        setInterval: setInterval,
+        setModeCompete: setModeCompete,
+        setModeMeek: setModeMeek,
         MODE_COMPETE: MODE_COMPETE,
         MODE_MEEK: MODE_MEEK
     };
