@@ -5,7 +5,7 @@ chordz = function() {
     let chords = {};
     const MODE_COMPETE = 0;
     const MODE_MEEK = 1;
-    let mode = MODE_COMPETE;
+    let mode = MODE_MEEK;
 
     function setInterval(v) {
         clearInterval = v;
@@ -41,7 +41,7 @@ chordz = function() {
     };
 
     function logSettings() {
-        console.log("chordz: mode = " + getModeString() + " interval = " + clearInterval);
+        console.log("chordz: mode=" + getModeString() + " interval=" + clearInterval);
     };
 
     function checkMatch() {
@@ -100,8 +100,19 @@ chordz = function() {
         logSettings();
     }
 
+    function ignore(id) {
+        var el = document.getElementById(id);
+        if (!el)
+            return;
+        el.addEventListener("keydown", function(evt) {
+            evt.stopPropagation();
+            return true;
+        });
+    }
+
     return {
         init: init,
+        ignore: ignore,
         register: register,
         unregister: unregister,
         setInterval: setInterval,
@@ -112,4 +123,4 @@ chordz = function() {
     };
 }();
 
-chordz.init(chordz.MODE_MEEK);
+chordz.init();
