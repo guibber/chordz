@@ -1,126 +1,129 @@
 chordz = function() {
-    let activeKeys = "";
-    let clearInterval = 300;
-    let timeoutId = null;
-    let chords = {};
     const MODE_COMPETE = 0;
     const MODE_MEEK = 1;
-    let mode = MODE_MEEK;
 
-    function setInterval(v) {
-        clearInterval = v;
-    };
+    function configure(el, initMode, initClearInterval) {
+        let activeKeys = "";
+        let clearInterval = 300;
+        let timeoutId = null;
+        let chords = {};
+        let mode = MODE_MEEK;
 
-    function setModeCompete() {
-        mode = MODE_COMPETE;
-    };
+        function setInterval(v) {
+            clearInterval = v;
+        };
 
-    function setModeMeek() {
-        mode = MODE_MEEK;
-    };
+        function setModeCompete() {
+            mode = MODE_COMPETE;
+        };
 
-    function scheduleFunc(func) {
-        timeoutId = window.setTimeout(func, clearInterval);
-    };
+        function setModeMeek() {
+            mode = MODE_MEEK;
+        };
 
-    function clearActiveKeys() { activeKeys = ""; }
+        function scheduleFunc(func) {
+            timeoutId = window.setTimeout(func, clearInterval);
+        };
 
-    function cancelScheduledFunc() {
-        if (timeoutId) {
-            window.clearTimeout(timeoutId);
-            timeoutId = null;
-        }
-    };
+        function clearActiveKeys() { activeKeys = ""; }
 
-    function getModeString() {
-        return mode === MODE_COMPETE ? "MODE_COMPETE" : "MODE_MEEK";
-    };
+        function cancelScheduledFunc() {
+            if (timeoutId) {
+                window.clearTimeout(timeoutId);
+                timeoutId = null;
+            }
+        };
 
-    function log() {
-        console.log("chordz: " + activeKeys);
-    };
+        function getModeString() {
+            return mode === MODE_COMPETE ? "MODE_COMPETE" : "MODE_MEEK";
+        };
 
-    function logSettings() {
-        console.log("chordz: mode=" + getModeString() + " interval=" + clearInterval);
-    };
+        function log() {
+            console.log("chordz:" + el.id + ':' + activeKeys);
+        };
 
-    function checkMatch() {
-        let chord = chords[activeKeys];
-        return chord;
-    };
+        function logSettings() {
+            console.log("chordz:" + el.id + ":init mode=" + getModeString() + " interval=" + clearInterval);
+        };
 
-    function callMatchingChord() {
-        let match = checkMatch();
-        log();
-        if (match) {
-            let ret = match();
+        function checkMatch() {
+            let chord = chords[activeKeys];
+            return chord;
+        };
+
+        function callMatchingChord() {
+            let match = checkMatch();
+            log();
+            if (match) {
+                let ret = match();
+                activeKeys = "";
+                return ret;
+            }
             activeKeys = "";
-            return ret;
         }
-        activeKeys = "";
-    }
 
-    function handleCompeteKeydown(evt) {
-        let match = checkMatch();
-        log();
-        if (match) {
-            let ret = match();
-            activeKeys = "";
-            return ret;
-        }
-        cancelScheduledFunc();
-        scheduleFunc(clearActiveKeys);
-    };
+        function handleCompeteKeydown(evt) {
+            let match = checkMatch();
+            log();
+            if (match) {
+                let ret = match();
+                activeKeys = "";
+                return ret;
+            }
+            cancelScheduledFunc();
+            scheduleFunc(clearActiveKeys);
+        };
 
-    function handleMeekKeydown(evt) {
-        cancelScheduledFunc();
-        scheduleFunc(callMatchingChord);
-    };
+        function handleMeekKeydown(evt) {
+            cancelScheduledFunc();
+            scheduleFunc(callMatchingChord);
+        };
 
-    function handleKeydown(evt) {
-        activeKeys += evt.key;
-        if (mode === MODE_COMPETE)
-            return handleCompeteKeydown(evt);
-        else
-            return handleMeekKeydown(evt);
-    };
+        function handleKeydown(evt) {
+            activeKeys += evt.key;
+            if (mode === MODE_COMPETE)
+                return handleCompeteKeydown(evt);
+            else
+                return handleMeekKeydown(evt);
+        };
 
-    function register(chord, func) {
-        chords[chord] = func;
-    };
+        function register(chord, func) {
+            console.log('chordz:' + el.id + ':register "' + chord + '"');
+            chords[chord] = func;
+        };
 
-    function unregister(chord) {
-        chords[chord] = null;
-    };
+        function unregister(chord) {
+            chords[chord] = null;
+        };
 
-    function init(initMode, initClearInterval) {
         mode = initMode || mode;
         clearInterval = initClearInterval | clearInterval;
-        document.addEventListener("keydown", handleKeydown);
+        el.addEventListener("keydown", handleKeydown);
+        el.tabIndex = el.tabIndex != -1 ? el.tabIndex : "1";
         logSettings();
+
+        return {
+            register: register,
+            unregister: unregister,
+            setInterval: setInterval,
+            setModeCompete: setModeCompete,
+            setModeMeek: setModeMeek,
+        };
     }
 
-    function ignore(id) {
-        var el = document.getElementById(id);
-        if (!el)
-            return;
-        el.addEventListener("keydown", function(evt) {
-            evt.stopPropagation();
-            return true;
-        });
+    function init(id, initMode, initClearInterval) {
+        let el = document.getElementById(id);
+        if (!el) {
+            console.log('failed to init chordz for element id = ' + id);
+            return null;
+        }
+        el.chordz = configure(el, initMode, initClearInterval);
+        return el.chordz;
     }
 
     return {
         init: init,
-        ignore: ignore,
-        register: register,
-        unregister: unregister,
-        setInterval: setInterval,
-        setModeCompete: setModeCompete,
-        setModeMeek: setModeMeek,
         MODE_COMPETE: MODE_COMPETE,
         MODE_MEEK: MODE_MEEK
     };
 }();
-
-chordz.init();
